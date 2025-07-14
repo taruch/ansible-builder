@@ -1,0 +1,39 @@
+---
+version: 3
+
+build_arg_defaults:
+  ANSIBLE_GALAXY_CLI_COLLECTION_OPTS: '-c'
+
+dependencies:
+  galaxy: requirements.yml
+  # python: requirements.txt
+  system: bindep.txt
+
+images:
+  base_image:
+    # name: quay.io/acme_corp/product-demos-ee:latest
+    # name: registry.redhat.io/ansible-automation-platform-24/ee-supported-rhel8:latest
+    name: registry.redhat.io/ansible-automation-platform-24/ee-minimal-rhel8:latest
+
+additional_build_files:
+  - src: files/ansible.cfg
+    dest: configs
+
+options:
+  package_manager_path: /usr/bin/microdnf
+
+additional_build_steps:
+  prepend_base:
+    - RUN echo This is a prepend base command!
+    - RUN $PYCMD -m pip install wheel
+  prepend_galaxy:
+    - ADD _build/configs/ansible.cfg /etc/ansible/ansible.cfg
+    - RUN cat /etc/ansible/ansible.cfg
+    - RUN echo $ANSIBLE_GALAXY_SERVER_CERTIFIED_TOKEN
+    - RUN echo $ANSIBLE_GALAXY_SERVER_VALIDATED_TOKEN
+  prepend_final: |
+    RUN whoami
+    RUN cat /etc/os-release
+  append_final:
+    - RUN echo This is a post-install command!
+    - RUN ls -la /etc
